@@ -6,5 +6,12 @@ terraform {
     }
   }
 
-  required_version = ">= 1.2.7"
+  //Todo: Introduce remote state
+  # required_version = ">= 1.2.7"
+  # backend "s3" {
+  #   bucket = "draznet-infra"
+  #   key    = "tf-states/codetools.tfstate"
+  #   region = "af-south-1"
+  # }
+
 }
