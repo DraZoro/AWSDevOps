@@ -19,3 +19,25 @@ variable "codecommit_tags" {
   }
   description = "The list of tags for the repository"
 }
+
+variable "topic_name" {
+  type        = string
+  default     = "CodeCommitNotification"
+  description = "The SNS topic name"
+}
+
+variable "trigger_name" {
+  type        = string
+  default     = "TestTrigger"
+  description = "The trigger name for CodeCommit Repository"
+}
+
+variable "topic_tags" {
+  type = map(string)
+  default = {
+    Environment = "Test"
+    Department  = "Training"
+
+  }
+  description = "The list of tags for the SNS topic"
+}
