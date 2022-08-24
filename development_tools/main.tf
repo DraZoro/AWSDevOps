@@ -27,3 +27,94 @@ resource "aws_codecommit_trigger" "test" {
     destination_arn = aws_sns_topic.test.arn
   }
 }
+
+// Codebuild - Work in progresss 
+resource "aws_iam_role" "build_role" {
+  name = "CodeBuildRole"
+
+  assume_role_policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Principal" : {
+          "Service" : "codebuild.amazonaws.com"
+        },
+        "Action" : "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "build_policy" {
+  role = aws_iam_role.build_role.name
+  name = "CodeBuildPolicy"
+
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Resource" : [
+          "*"
+        ],
+        "Action" : [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+      },
+      {
+        "Effect" : "Allow",
+        "Action" : [
+          "ec2:CreateNetworkInterface",
+          "ec2:DescribeDhcpOptions",
+          "ec2:DescribeNetworkInterfaces",
+          "ec2:DeleteNetworkInterface",
+          "ec2:DescribeSubnets",
+          "ec2:DescribeSecurityGroups",
+          "ec2:DescribeVpcs"
+        ],
+        "Resource" : "*"
+      }
+    ]
+  })
+}
+
+
+resource "aws_codebuild_project" "test-build-project" {
+  name          = "TestProject"
+  description   = "The project to build a NodeJS web application"
+  build_timeout = "5"
+  service_role  = aws_iam_role.build_role.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "aws/codebuild/amazonlinux2-x86_64-standard:4.0"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
+
+  }
+
+  logs_config {
+    cloudwatch_logs {
+      group_name  = "log-group-codebuild"
+      stream_name = "web-page-build"
+    }
+  }
+
+  source {
+    type            = "CODECOMMIT"
+    location        = "my-webpage"
+  }
+
+  source_version = "main"
+
+  tags = {
+    Environment = "Test"
+  }
+}
