@@ -118,3 +118,32 @@ resource "aws_codebuild_project" "test-build-project" {
     Environment = "Test"
   }
 }
+
+# Testing driving S3 bucket features 
+# This to be moved later 
+resource "aws_s3_bucket" "log_bucket" {
+  bucket = "draznet-log-bucket-18-nov-2022"
+}
+
+resource "aws_s3_bucket" "bucket" {
+  bucket = "draznet-insecure-tf-bucket-18-nov-2022"
+  acl    = "private"
+  
+  versioning {
+    enabled = true
+  }
+}
+
+resource "aws_s3_bucket_logging" "draznet-insecure-tf-bucket-18-nov-2022" {
+  bucket = aws_s3_bucket.bucket.id
+
+  target_bucket = aws_s3_bucket.log_bucket.id
+  target_prefix = "log/"
+}
+
+resource "aws_s3_bucket_logging" "bucket_logging" {
+  bucket = aws_s3_bucket.bucket.id
+
+  target_bucket = aws_s3_bucket.log_bucket.id
+  target_prefix = "log/"
+}
