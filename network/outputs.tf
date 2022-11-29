@@ -5,5 +5,16 @@ output "vpc_id" {
 
 output "vpc_arn" {
     value = aws_vpc.main.arn
-    description = "The VPC ARN"
+    description = "the vpc arn"
+}
+
+
+output "gateway_id" {
+    value = aws_internet_gateway.gw.id
+    description = "The internet gateway ID"
+}
+
+output "gateway_arn" {
+    value = aws_internet_gateway.gw.arn
+    description = "The internet gateway ARN"
 }

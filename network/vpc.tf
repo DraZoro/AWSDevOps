@@ -32,6 +32,14 @@ resource "aws_subnet" "private" {
   }
 }
 
+resource "aws_internet_gateway" "gw" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "main"
+  }
+}
+
 # Route Table 
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
