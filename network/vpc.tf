@@ -21,10 +21,21 @@ resource "aws_subnet" "public" {
   }
 }
 
-resource "aws_subnet" "private" {
+resource "aws_subnet" "private-1a" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.2.0/24"
   availability_zone = "af-south-1a"
+
+
+  tags = {
+    Name = "PrivateA"
+  }
+}
+
+resource "aws_subnet" "private-1b" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "10.0.3.0/24"
+  availability_zone = "af-south-1b"
 
 
   tags = {
@@ -65,12 +76,12 @@ resource "aws_route_table" "private" {
 }
 
 
-# resource "aws_route_table_association" "public" {
-#   subnet_id      = aws_subnet.pulic.id
-#   route_table_id = aws_route_table.main.id
-# }
+resource "aws_route_table_association" "public_subnet_association" {
+  subnet_id      = aws_subnet.public.id
+  route_table_id = aws_route_table.public.id
+}
 
-# resource "aws_route_table_association" "private" {
-#   subnet_id      = aws_subnet.private.id
-#   route_table_id = aws_route_table.main.id
-# }
+resource "aws_route_table_association" "private_subnet_association" {
+  subnet_id      = aws_subnet.private-1a.id
+  route_table_id = aws_route_table.private.id
+}
