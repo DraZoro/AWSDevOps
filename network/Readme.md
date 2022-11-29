@@ -8,7 +8,7 @@
 * Kubernetes Version in use ...
 * Terraoform AWS Provider user used is version 4.41.0  
 
-![Infrastructure Overview](/assets/infrastructure_overview.png)
+![Infrastructure Overview](/network/assets/infrastructure_overview.png)
 
 ## Building the environment 
 
