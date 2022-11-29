@@ -6,11 +6,11 @@ terraform {
     }
   }
 
-#   required_version = ">= 1.3.5"
-#   backend "s3" {
-#     bucket = "draznet-infra"
-#     key    = "tf-states/k8s.tfstate"
-#     region = "af-south-1"
-#   }
+  #   required_version = ">= 1.3.5"
+  #   backend "s3" {
+  #     bucket = "draznet-infra"
+  #     key    = "tf-states/k8s.tfstate"
+  #     region = "af-south-1"
+  #   }
 
 }
