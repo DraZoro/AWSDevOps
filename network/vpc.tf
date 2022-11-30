@@ -57,6 +57,18 @@ resource "aws_subnet" "private" {
   }
 }
 
+
+resource "aws_subnet" "private-2" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "10.0.3.0/24"
+  availability_zone = "af-south-1b"
+
+
+  tags = {
+    Name = "PrivateB"
+  }
+}
+
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.main.id
 
@@ -83,6 +95,11 @@ resource "aws_route_table" "public" {
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 
+  route {
+    cidr_block = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.nat-gw.id
+  }
+
 
   tags = {
     Name = "Private"
@@ -103,7 +120,7 @@ resource "aws_route_table_association" "private_subnet_association" {
 # To be moved to its own file
 resource "aws_key_pair" "dev-key" {
   key_name   = "dev-key"
-  public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA5MVC3GlNhOKGj7gx/ezCRfrMMbY5z40OelIWEAbzA1 clement.mahlangu@gmail.com"
+  public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEFfifgVhD9lVBmw7FTe6IaxRoHsqHKMTMTF4u9w2R0E clement.mahlangu@gmail.com"
 
   tags = {
     Name    = "dev-key"
@@ -116,7 +133,7 @@ resource "aws_instance" "bastion" {
   # Amazon Linux 2 
   # Todo: User filter 
   ami           = "ami-0f4500c7ee9bc5381"
-  instance_type = "t3.micro"
+  instance_type = "t3.nano"
   key_name      = aws_key_pair.dev-key.id
   subnet_id     = aws_subnet.public.id
   vpc_security_group_ids  = [aws_security_group.allow_ssh.id]
@@ -127,23 +144,58 @@ resource "aws_instance" "bastion" {
   }
 }
 
-resource "aws_instance" "worker" {
+resource "aws_instance" "worker-1" {
   # Amazon Linux 2 
   # Todo: User filter 
   # Ubuntu 20.04
-  count = 2
   ami           = "ami-0fffe3a460634f60c"
-  instance_type = "t3.medium"
+  instance_type = "t3.nano"
   key_name      = aws_key_pair.dev-key.id
   subnet_id     = aws_subnet.private.id
   vpc_security_group_ids  = [aws_security_group.allow_ssh.id]
   # volume_type = "gp3"
 
   tags = {
-    Name = "Worker"
+    Name = "Worker-1"
   }
 
 }
+
+resource "aws_instance" "worker-2" {
+  # Amazon Linux 2 
+  # Todo: User filter 
+  # Ubuntu 20.04
+  ami           = "ami-0fffe3a460634f60c"
+  instance_type = "t3.nano"
+  key_name      = aws_key_pair.dev-key.id
+  subnet_id     = aws_subnet.private.id
+  vpc_security_group_ids  = [aws_security_group.allow_ssh.id]
+  # volume_type = "gp3"
+
+  tags = {
+    Name = "Worker-2"
+  }
+
+}
+
+resource "aws_instance" "master" {
+  # Amazon Linux 2 
+  # Todo: User filter 
+  # Ubuntu 20.04
+  count = 1
+  ami           = "ami-0fffe3a460634f60c"
+  instance_type = "t3.nano"
+  key_name      = aws_key_pair.dev-key.id
+  subnet_id     = aws_subnet.private.id
+  vpc_security_group_ids  = [aws_security_group.allow_ssh.id]
+  # volume_type = "gp3"
+
+  tags = {
+    Name = "Master"
+  }
+
+}
+
 
 
 resource "aws_eip" "bastion" {
