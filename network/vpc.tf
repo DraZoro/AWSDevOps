@@ -10,6 +10,31 @@ resource "aws_vpc" "main" {
   }
 }
 
+resource "aws_security_group" "allow_ssh" {
+  name        = "allow_ssh"
+  description = "Allow SSH Connection"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description      = "SSH Public Access"
+    from_port        = 22
+    to_port          = 22
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "allow_ssh"
+  }
+}
+
 # Subnets 
 resource "aws_subnet" "public" {
   vpc_id            = aws_vpc.main.id
@@ -21,7 +46,7 @@ resource "aws_subnet" "public" {
   }
 }
 
-resource "aws_subnet" "private-1a" {
+resource "aws_subnet" "private" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.2.0/24"
   availability_zone = "af-south-1a"
@@ -29,17 +54,6 @@ resource "aws_subnet" "private-1a" {
 
   tags = {
     Name = "PrivateA"
-  }
-}
-
-resource "aws_subnet" "private-1b" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.3.0/24"
-  availability_zone = "af-south-1b"
-
-
-  tags = {
-    Name = "PrivateB"
   }
 }
 
@@ -82,6 +96,72 @@ resource "aws_route_table_association" "public_subnet_association" {
 }
 
 resource "aws_route_table_association" "private_subnet_association" {
-  subnet_id      = aws_subnet.private-1a.id
+  subnet_id      = aws_subnet.private.id
   route_table_id = aws_route_table.private.id
+}
+
+# To be moved to its own file
+resource "aws_key_pair" "dev-key" {
+  key_name   = "dev-key"
+  public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA5MVC3GlNhOKGj7gx/ezCRfrMMbY5z40OelIWEAbzA1 clement.mahlangu@gmail.com"
+
+  tags = {
+    Name    = "dev-key"
+    Project = "Training"
+  }
+
+}
+
+resource "aws_instance" "bastion" {
+  # Amazon Linux 2 
+  # Todo: User filter 
+  ami           = "ami-0f4500c7ee9bc5381"
+  instance_type = "t3.micro"
+  key_name      = aws_key_pair.dev-key.id
+  subnet_id     = aws_subnet.public.id
+  vpc_security_group_ids  = [aws_security_group.allow_ssh.id]
+  # volume_type = "gp3"
+
+  tags = {
+    Name = "Bastion"
+  }
+}
+
+resource "aws_instance" "worker" {
+  # Amazon Linux 2 
+  # Todo: User filter 
+  # Ubuntu 20.04
+  count = 2
+  ami           = "ami-0fffe3a460634f60c"
+  instance_type = "t3.medium"
+  key_name      = aws_key_pair.dev-key.id
+  subnet_id     = aws_subnet.private.id
+  vpc_security_group_ids  = [aws_security_group.allow_ssh.id]
+  # volume_type = "gp3"
+
+  tags = {
+    Name = "Worker"
+  }
+
+}
+
+
+resource "aws_eip" "bastion" {
+  instance = aws_instance.bastion.id
+  vpc      = true
+}
+
+resource "aws_eip" "nat-gw" {
+  vpc      = true
+}
+
+resource "aws_nat_gateway" "nat-gw" {
+  allocation_id = aws_eip.nat-gw.id
+  subnet_id     = aws_subnet.public.id
+
+  tags = {
+    Name = "gw NAT"
+  }
+
+  depends_on = [aws_internet_gateway.gw]
 }
